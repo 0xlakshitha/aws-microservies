@@ -6,38 +6,70 @@ import { join } from "path";
 
 
 interface SwnMicroservicesProps {
-    productTable: ITable
+    productTable: ITable,
+    basketTable: ITable
 }
 
 
 export class SwnMicroservices extends Construct {
 
     public readonly productMicroservice: NodejsFunction
+    public readonly basketMicroservice: NodejsFunction
 
     constructor(scope: Construct, id: string, props: SwnMicroservicesProps) {
         super(scope, id)
 
-        const nodejsFunctionProps: NodejsFunctionProps = {
-            bundling: {
-              externalModules: [
-                'aws-sdk'
-              ]
-            },
-            environment: {
-              PRIMARY_KEY: 'id',
-              DYNAMODB_TABLE_NAME: props.productTable.tableName
-            },
-            runtime: Runtime.NODEJS_18_X
-          }
-      
-          const productFunction = new NodejsFunction(this, 'productLambdaFunction', {
-            entry: join(__dirname, `/../src/product/index.js`),
-            ...nodejsFunctionProps
-          })
-      
-          props.productTable.grantReadWriteData(productFunction)
+        this.productMicroservice = this.createProductFunction(props.productTable)
+        this.basketMicroservice = this.createBasketFunction(props.basketTable)
 
-          this.productMicroservice = productFunction
+    }
+
+    private createProductFunction(productTable: ITable): NodejsFunction {
+        const nodejsFunctionProps: NodejsFunctionProps = {
+          bundling: {
+            externalModules: [
+              'aws-sdk'
+            ]
+          },
+          environment: {
+            PRIMARY_KEY: 'id',
+            DYNAMODB_TABLE_NAME: productTable.tableName
+          },
+          runtime: Runtime.NODEJS_18_X
+        }
+    
+        const productFunction = new NodejsFunction(this, 'productLambdaFunction', {
+          entry: join(__dirname, `/../src/product/index.js`),
+          ...nodejsFunctionProps
+        })
+    
+        productTable.grantReadWriteData(productFunction)
+
+        return productFunction
+    }
+
+    private createBasketFunction(basketTable: ITable): NodejsFunction {
+        const nodejsFunctionProps: NodejsFunctionProps = {
+          bundling: {
+            externalModules: [
+              'aws-sdk'
+            ]
+          },
+          environment: {
+            PRIMARY_KEY: 'username',
+            DYNAMODB_TABLE_NAME: basketTable.tableName
+          },
+          runtime: Runtime.NODEJS_18_X
+        }
+    
+        const basketFunction = new NodejsFunction(this, 'basketLambdaFunction', {
+          entry: join(__dirname, `/../src/basket/index.js`),
+          ...nodejsFunctionProps
+        })
+    
+        basketTable.grantReadWriteData(basketFunction)
+
+        return basketFunction
     }
 
 }

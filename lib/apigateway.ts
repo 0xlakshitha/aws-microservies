@@ -3,7 +3,8 @@ import { IFunction } from "aws-cdk-lib/aws-lambda";
 import { Construct } from "constructs";
 
 interface SwnApiGatewayProps {
-    productMicroservice: IFunction
+    productMicroservice: IFunction,
+    basketMicroservice: IFunction
 }
 
 export class SwnApiGateway extends Construct {
@@ -11,6 +12,12 @@ export class SwnApiGateway extends Construct {
     constructor(scope: Construct, id: string, props: SwnApiGatewayProps) {
         super(scope, id)
 
+        this.createProductApi(props.productMicroservice)
+        this.createBasketApi(props.basketMicroservice)
+
+    }
+
+    private createProductApi(productMicroservice: IFunction) {
         // Product micrservices API GATEWAY
         // root name = product
         // GET /product
@@ -23,7 +30,7 @@ export class SwnApiGateway extends Construct {
 
         const apigw = new LambdaRestApi(this, 'productApi', {
             restApiName: 'Product Service',
-            handler: props.productMicroservice,
+            handler: productMicroservice,
             proxy: false
         })
   
@@ -35,7 +42,37 @@ export class SwnApiGateway extends Construct {
         singleProduct.addMethod('GET')
         singleProduct.addMethod('PUT')
         singleProduct.addMethod('DELETE')
+    }
 
+    private createBasketApi(basketMicroservice: IFunction) {
+        // Basket micrservices API GATEWAY
+        // root name = basket
+        // GET /basket
+        // POST /basket
+        
+        // resource name = basket/{username}
+        // GET /basket/{username}
+        // PUT /basket/{username}
+        // DELETE /basket/{username}
+
+        // POST /basket/checkout
+
+        const apigw = new LambdaRestApi(this, 'basketApi', {
+            restApiName: 'Basket Service',
+            handler: basketMicroservice,
+            proxy: false
+        })
+  
+        const basket = apigw.root.addResource('basket')
+        basket.addMethod('GET')
+        basket.addMethod('POST')
+    
+        const singleBasket = basket.addResource('{username}')
+        singleBasket.addMethod('GET')
+        singleBasket.addMethod('DELETE')
+
+        const basketCheckout = basket.addResource('checkout')
+        basketCheckout.addMethod('POST')
     }
 
 }
