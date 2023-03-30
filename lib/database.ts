@@ -6,12 +6,14 @@ export class SwnDatabase extends Construct {
 
     public readonly productTable: ITable
     public readonly basketTable: ITable
+    public readonly orderTable: ITable
 
     constructor(scope: Construct, id: string){
         super(scope, id)
 
         this.productTable = this.createProductTable()
         this.basketTable = this.createBasketTable()
+        this.orderTable = this.createOrderTable()
 
     }
 
@@ -41,6 +43,24 @@ export class SwnDatabase extends Construct {
         })
 
         return basketTable
+    }
+
+    private createOrderTable(): ITable {
+        const orderTable = new Table(this, 'order', {
+            partitionKey: {
+                name: 'username',
+                type: AttributeType.STRING
+            },
+            sortKey: {
+                name: 'orderdate',
+                type: AttributeType.STRING
+            },
+            tableName: 'order',
+            removalPolicy: RemovalPolicy.DESTROY,
+            billingMode: BillingMode.PAY_PER_REQUEST
+        })
+
+        return orderTable
     }
 
 }
