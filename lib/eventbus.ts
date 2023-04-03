@@ -1,12 +1,14 @@
 import { EventBus, Rule } from "aws-cdk-lib/aws-events";
-import { LambdaFunction } from "aws-cdk-lib/aws-events-targets";
+import { LambdaFunction, SqsQueue } from "aws-cdk-lib/aws-events-targets";
 import { IFunction } from "aws-cdk-lib/aws-lambda";
+import { IQueue } from "aws-cdk-lib/aws-sqs";
 import { Construct } from "constructs";
 
 
 interface SwnEventBusProps {
     publisherFunction: IFunction,
-    targetFunction: IFunction
+    // targetFunction: IFunction,
+    targetQueue: IQueue
 }
 
 export class SwnEventBus extends Construct {
@@ -29,7 +31,8 @@ export class SwnEventBus extends Construct {
             ruleName: 'CheckoutBasketRule'
         })
     
-        chekcoutBasketRule.addTarget(new LambdaFunction(props.targetFunction))
+        // chekcoutBasketRule.addTarget(new LambdaFunction(props.targetFunction))
+        chekcoutBasketRule.addTarget(new SqsQueue(props.targetQueue))
 
         bus.grantPutEventsTo(props.publisherFunction)
 
