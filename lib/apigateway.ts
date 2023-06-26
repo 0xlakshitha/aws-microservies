@@ -97,4 +97,5 @@ export class SwnApiGateway extends Construct {
         singleOrder.addMethod('GET')
     }
 
+    
 }
